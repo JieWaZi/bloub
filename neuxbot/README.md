@@ -1,6 +1,6 @@
 # NeuxBot Bloub
 
-这是 [JieWaZi/bloub](https://github.com/JieWaZi/bloub/tree/codex/neuxbot-materials) 的 `neuxbot/` 源码快照。固定来源和消费提交见 [upstream.json](upstream.json)。主仓库以源码构建，不引入 Vue 或 Solid 运行时。
+这是 [JieWaZi/bloub](https://github.com/JieWaZi/bloub/tree/codex/neuxbot-materials) 维护的头像库实现，使用根目录 `@neuxbot/bloub` 包公开入口接入。固定上游来源见 [upstream.json](upstream.json)，消费方以 Git 提交和锁文件固定版本，不复制源码。不引入 Vue 或 Solid 运行时。
 
 ## 职责
 
@@ -14,4 +14,4 @@ NeuxBot 的 React 层负责资源就绪后的完整外观交接、可见性、�
 
 ## 维护
 
-先在自维护 fork 的 `neuxbot/` 目录修改和验证，再以固定提交更新本目录。消费快照在 `upstream.json` 增加 `commit` 记录对应源提交；源仓库元数据不包含自引用提交号。更新时同步检查前端头像、状态编排、选择器与原生动作测试，保留 [MIT 许可](LICENSE) 和 [表情策略参考许可](LICENSE.dsh-bloub-mood)。
+在本仓库的 `neuxbot/` 目录修改和验证，再提交和推送。消费方更新包依赖的完整 Git 提交和锁文件；源仓库元数据不包含自引用提交号。更新时同步检查前端头像、状态编排、选择器与原生动作测试，保留 [MIT 许可](LICENSE) 和 [表情策略参考许可](LICENSE.dsh-bloub-mood)。

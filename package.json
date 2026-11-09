@@ -1,43 +1,52 @@
 {
-  "name": "bloub",
+  "name": "@neuxbot/bloub",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.1.0",
   "type": "module",
-  "description": "SVG recreation of the x.ai bot avatar. One shape morphing through 14 states, measured off the reference video frame by frame.",
+  "description": "Framework-independent avatar geometry, expressions, motion and NeuxBot materials.",
   "license": "MIT",
   "author": "Jérémy Perret",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jeremy-prt/bloub.git"
+    "url": "git+https://github.com/JieWaZi/bloub.git"
   },
-  "keywords": [
-    "svg",
-    "animation",
-    "avatar",
-    "vue",
-    "morphing"
+  "packageManager": "pnpm@10.34.4",
+  "exports": {
+    "./engine": "./neuxbot/src/bot/engine.ts",
+    "./expressions": "./neuxbot/src/bot/expressions.ts",
+    "./skins": "./neuxbot/src/bot/skins.ts",
+    "./states": "./neuxbot/src/bot/states.ts",
+    "./motion": "./neuxbot/src/plush/motion.ts",
+    "./plush-catalogue": "./neuxbot/src/plush/catalogue.ts",
+    "./tint": "./neuxbot/src/plush/tint.ts",
+    "./drawing": "./neuxbot/src/materials/drawing.ts",
+    "./materials": "./neuxbot/src/materials/catalogue.ts",
+    "./effects": "./neuxbot/src/materials/effects.ts",
+    "./eyes": "./neuxbot/src/materials/eyes.ts",
+    "./warp": "./neuxbot/src/materials/warp.ts",
+    "./assets/*": "./neuxbot/materials/*",
+    "./LICENSE": "./neuxbot/LICENSE",
+    "./LICENSE.dsh-bloub-mood": "./neuxbot/LICENSE.dsh-bloub-mood",
+    "./upstream.json": "./neuxbot/upstream.json",
+    "./expressions-source.json": "./neuxbot/expressions-source.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "neuxbot/src",
+    "neuxbot/materials",
+    "neuxbot/LICENSE",
+    "neuxbot/LICENSE.dsh-bloub-mood",
+    "neuxbot/upstream.json",
+    "neuxbot/expressions-source.json",
+    "neuxbot/README.md"
   ],
-  "packageManager": "pnpm@11.17.0",
   "scripts": {
-    "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build",
-    "preview": "vite preview",
-    "test": "vitest run",
-    "test:watch": "vitest"
-  },
-  "dependencies": {
-    "mediabunny": "^1.54.0",
-    "vue": "^3.5.41"
+    "materials:generate": "node neuxbot/tools/generate-particle-atlas.mjs",
+    "materials:check": "node neuxbot/tools/generate-particle-atlas.mjs --check",
+    "test": "vitest run --config neuxbot/vitest.config.ts"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.3.3",
-    "@types/node": "^26.0.0",
-    "@vitejs/plugin-vue": "^6.0.8",
-    "happy-dom": "^20.11.2",
-    "tailwindcss": "^4.3.3",
-    "typescript": "^5.9.3",
-    "vite": "^8.2.1",
-    "vitest": "^4.1.10",
-    "vue-tsc": "^3.3.9"
+    "esbuild": "0.28.2",
+    "vitest": "4.1.10"
   }
 }

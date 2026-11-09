@@ -4,9 +4,9 @@
 
 | 文件                                     | 用途                     | 实际尺寸    | 仓库输出路径                                |
 | ---------------------------------------- | ------------------------ | ----------- | ------------------------------------------- |
-| [body-template.png](body-template.png)   | 原创几何轮廓与布局指导图 | 1264 × 948  | `vendor/bloub/materials/body-template.png`  |
-| [body-plush.png](body-plush.png)         | 中灰细短毛绒身体         | 1448 × 1086 | `vendor/bloub/materials/body-plush.png`     |
-| [body-particles.svg](body-particles.svg) | 中性灰银发光粒子身体     | 1448 × 1086 | `vendor/bloub/materials/body-particles.svg` |
+| [body-template.png](body-template.png)   | 原创几何轮廓与布局指导图 | 1264 × 948  | `neuxbot/materials/body-template.png`  |
+| [body-plush.png](body-plush.png)         | 中灰细短毛绒身体         | 1448 × 1086 | `neuxbot/materials/body-plush.png`     |
+| [body-particles.svg](body-particles.svg) | 中性灰银发光粒子身体     | 1448 × 1086 | `neuxbot/materials/body-particles.svg` |
 
 [sprites.json](sprites.json) 记录图集尺寸、行列与形状顺序。10 种形状依次为 `cercle`、`galet`、`squircle`、`capsule`、`triangle`、`hexagone`、`nuage`、`carre`、`losange`、`pentagone`。渲染器按格显示完整身体，保留绒毛和粒子边缘；颜色可以根据身体的中灰明暗映射。
 
@@ -17,8 +17,8 @@
 重新生成与检查：
 
 ```sh
-node vendor/bloub/tools/generate-particle-atlas.mjs
-node vendor/bloub/tools/generate-particle-atlas.mjs --check
+node neuxbot/tools/generate-particle-atlas.mjs
+node neuxbot/tools/generate-particle-atlas.mjs --check
 ```
 
 [生成脚本](../tools/generate-particle-atlas.mjs) 直接读取现有 `SHAPES`、固定随机种子和 [sprites.json](sprites.json)，不依赖第三方图像素材或新增运行库。SVG 的物理尺寸为 1448 × 1086，内部坐标为 1264 × 948，与现有图格比例一致；末尾两格不生成任何内容。生成文件不手工编辑。
