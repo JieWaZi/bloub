@@ -1,0 +1,28 @@
+{
+  "columns": 4,
+  "rows": 3,
+  "shapes": [
+    "cercle",
+    "galet",
+    "squircle",
+    "capsule",
+    "triangle",
+    "hexagone",
+    "nuage",
+    "carre",
+    "losange",
+    "pentagone"
+  ],
+  "materials": {
+    "plush": {
+      "file": "body-plush.png",
+      "width": 1448,
+      "height": 1086
+    },
+    "particles": {
+      "file": "body-particles.png",
+      "width": 1448,
+      "height": 1086
+    }
+  }
+}

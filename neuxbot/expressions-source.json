@@ -1,0 +1,26 @@
+{
+  "reference": {
+    "repository": "https://github.com/Yuuhann1999/dsh-bloub-mood",
+    "commit": "c626528b3d6c32669c265d7144e85f60f48570d2",
+    "files": ["client-template.js"],
+    "license": "MIT",
+    "copyright": "Copyright (c) 2026 Yuuhann1999",
+    "licenseFile": "LICENSE.dsh-bloub-mood",
+    "adaptation": "Full expression pool selection excluding the current face, adapted to a typed pure function in packages/frontend/src/shared/companion/interaction-expressions.ts. No generated assets or additional rendering runtime are copied."
+  },
+  "catalogue": {
+    "originalCount": 16,
+    "addedBy": "NeuxBot",
+    "addedIds": [
+      "complice",
+      "determine",
+      "reveur",
+      "inquiet",
+      "espiegle",
+      "meditatif",
+      "ebloui",
+      "gene"
+    ],
+    "note": "The reference repository uses the same original sixteen Bloub expressions. The eight added capsule-eye poses are original NeuxBot extensions in the existing BotExpression catalogue."
+  }
+}
