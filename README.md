@@ -4,7 +4,7 @@ NeuxBot 维护的框架无关头像库。通用形状、24 种表情、状态动
 
 ## 接入
 
-消费方通过 `git+https://github.com/JieWaZi/bloub.git#<完整提交号>` 安装 `@neuxbot/bloub`，并提交包管理器锁文件。通过公开入口导入：
+消费方通过 `git+https://github.com/JieWaZi/bloub.git#main` 安装 `@neuxbot/bloub`，并提交包管理器锁文件。锁文件记录解析后的具体提交，更新库时一并更新锁文件。通过公开入口导入：
 
 ```ts
 import { BotEngine } from "@neuxbot/bloub/engine";
@@ -16,7 +16,7 @@ import { TEXTURES } from "@neuxbot/bloub/materials";
 
 ## 维护
 
-在本仓库修改 `neuxbot/`，执行 `pnpm install --frozen-lockfile` 、`pnpm test` 与 `pnpm materials:check`；修改生成逻辑后先运行 `pnpm materials:generate`。提交和推送后，在消费方更新固定 Git 提交及锁文件，并验证头像、状态编排、选择器、材质预载和许可交付。
+在本仓库修改 `neuxbot/`，执行 `pnpm install --frozen-lockfile` 、`pnpm test` 与 `pnpm materials:check`；修改生成逻辑后先运行 `pnpm materials:generate`。提交和推送后，在消费方刷新 `main` 依赖及锁文件，并验证头像、状态编排、选择器、材质预载和许可交付。
 
 ## 许可
 

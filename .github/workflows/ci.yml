@@ -1,7 +1,7 @@
 name: Avatar library
 on:
   push:
-    branches: [main, codex/neuxbot-materials]
+    branches: [main]
   pull_request:
 jobs:
   verify:

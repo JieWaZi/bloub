@@ -1,6 +1,6 @@
 # NeuxBot Bloub
 
-这是 [JieWaZi/bloub](https://github.com/JieWaZi/bloub/tree/codex/neuxbot-materials) 维护的头像库实现，使用根目录 `@neuxbot/bloub` 包公开入口接入。固定上游来源见 [upstream.json](upstream.json)，消费方以 Git 提交和锁文件固定版本，不复制源码。不引入 Vue 或 Solid 运行时。
+这是 [JieWaZi/bloub](https://github.com/JieWaZi/bloub/tree/main) 维护的头像库实现，使用根目录 `@neuxbot/bloub` 包公开入口接入。固定上游来源见 [upstream.json](upstream.json)，消费方引用 `main` 分支，以锁文件固定解析提交，不复制源码。不引入 Vue 或 Solid 运行时。
 
 ## 职责
 
