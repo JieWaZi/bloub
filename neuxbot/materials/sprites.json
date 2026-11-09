@@ -17,12 +17,14 @@
     "plush": {
       "file": "body-plush.png",
       "width": 1448,
-      "height": 1086
+      "height": 1086,
+      "visualScale": 1
     },
     "particles": {
       "file": "body-particles.svg",
       "width": 1448,
-      "height": 1086
+      "height": 1086,
+      "visualScale": 1.2
     }
   }
 }
