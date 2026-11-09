@@ -24,7 +24,7 @@ export const PALETTE = [
 export const DEFAULT_COLOR = "#8b5cf6";
 export const TEXTURES: Record<Material, string> = {
   plush: new URL("../../materials/body-plush.png", import.meta.url).href,
-  particles: new URL("../../materials/body-particles.png", import.meta.url)
+  particles: new URL("../../materials/body-particles.svg", import.meta.url)
     .href,
 };
 export const BODY_SHAPES = sprites.shapes;
