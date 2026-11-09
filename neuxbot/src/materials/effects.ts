@@ -1,4 +1,50 @@
 import { arcRender, RINGS } from "../bot/decor";
+import { createRng } from "../bot/math";
+import { radiusAtAngle, type Silhouette } from "../bot/shape";
+
+const particleRandom = createRng(0x4e657578);
+const PARTICLE_SEEDS = Array.from({ length: 184 }, (_, index) => {
+  const back = index < 40;
+  return {
+    back,
+    angle: particleRandom() * Math.PI * 2,
+    // 少量后景粒子散在轮廓外，两层均覆盖面部区域；随机角度避免规则点阵或螺旋。
+    radius:
+      index < 16
+        ? 0.94 + particleRandom() * 0.17
+        : Math.sqrt(particleRandom()) * 0.97,
+    size: particleRandom(),
+    phase: particleRandom() * Math.PI * 2,
+  };
+});
+
+/** 大小分层的粒子在缩小后仍可辨，随原生轮廓形变；时间只取调用方已有绘图时钟。 */
+export function bodyParticles(silhouette: Silhouette, time: number) {
+  return PARTICLE_SEEDS.map((seed, index) => {
+    const depth = Math.sqrt(Math.max(0, 1 - seed.radius ** 2));
+    const angle =
+      seed.angle +
+      time * (seed.back ? -0.023 : 0.038) +
+      Math.sin(time * 0.6 + seed.phase) * 0.018;
+    const rho = seed.radius + Math.sin(time * 0.75 + seed.phase) * 0.012;
+    const radius = radiusAtAngle(silhouette.radii, angle) * 100;
+    const light =
+      depth * 0.4 - Math.cos(angle) * rho * 0.35 - Math.sin(angle) * rho * 0.45;
+    return {
+      index,
+      back: seed.back,
+      x: Math.cos(angle) * rho * radius,
+      y: Math.sin(angle) * rho * radius,
+      light,
+      r: seed.back
+        ? 1.1 + seed.size * 2.1
+        : 2.6 + depth * 1.3 + seed.size ** 0.7 * 4.6,
+      opacity: seed.back
+        ? 0.34 + seed.size * 0.36
+        : 0.78 + light * 0.1 + Math.sin(time * 1.1 + seed.phase) * 0.1,
+    };
+  });
+}
 
 /** 连接是持续业务状态，复用 Bloub 环轨几何并保持可见，不使用一次性入场淡出。 */
 export function connectionArcs(time: number) {

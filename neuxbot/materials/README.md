@@ -2,13 +2,15 @@
 
 [body-plush.png](body-plush.png) 与 [body-particles.png](body-particles.png) 是完整立体身体图集。每张采用 4 列 × 3 行等大方格，按行排列 10 种几何形状，末尾两格不放置身体。每个身体包含凸起前表面、圆润侧缘、左上柔光与右下自身暗部，无面部、肢体或地面投影。
 
-| 文件 | 用途 | 实际尺寸 | 仓库输出路径 |
-| --- | --- | --- | --- |
-| [body-template.png](body-template.png) | 原创几何轮廓与布局指导图 | 1264 × 948 | `vendor/bloub/materials/body-template.png` |
-| [body-plush.png](body-plush.png) | 中灰细短毛绒身体 | 1448 × 1086 | `vendor/bloub/materials/body-plush.png` |
-| [body-particles.png](body-particles.png) | 中性灰银发光粒子身体 | 1448 × 1086 | `vendor/bloub/materials/body-particles.png` |
+| 文件                                     | 用途                     | 实际尺寸    | 仓库输出路径                                |
+| ---------------------------------------- | ------------------------ | ----------- | ------------------------------------------- |
+| [body-template.png](body-template.png)   | 原创几何轮廓与布局指导图 | 1264 × 948  | `vendor/bloub/materials/body-template.png`  |
+| [body-plush.png](body-plush.png)         | 中灰细短毛绒身体         | 1448 × 1086 | `vendor/bloub/materials/body-plush.png`     |
+| [body-particles.png](body-particles.png) | 中性灰银发光粒子身体     | 1448 × 1086 | `vendor/bloub/materials/body-particles.png` |
 
 [sprites.json](sprites.json) 记录图集尺寸、行列与形状顺序。10 种形状依次为 `cercle`、`galet`、`squircle`、`capsule`、`triangle`、`hexagone`、`nuage`、`carre`、`losange`、`pentagone`。渲染器按格显示完整身体，保留绒毛和粒子边缘；颜色可以根据身体的中灰明暗映射。
+
+粒子材质使用图集的半透明体积作为明暗基底，并由 [effects.ts](../src/materials/effects.ts) 提供前后两层大小不同的粒子与少量轮廓散粒。粒子随原生身体轮廓变形，使用现有绘图时钟缓慢流动和闪烁；[drawing.ts](../src/materials/drawing.ts) 共享亮暗渐变绘制粒子，最后绘制眼睛，不擦除眼部周围的表面。这样在小头像中仍有可辨认的颗粒，而非仅依赖缩小后难以看清的图集细点。毛绒继续直接使用原始完整图集。
 
 ## 来源与检查
 

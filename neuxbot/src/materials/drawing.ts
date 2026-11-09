@@ -1,7 +1,7 @@
 import type { BotFrame } from "../bot/engine";
 import { NOTIF_BLUE } from "../bot/decor";
 import type { ShapeId } from "../bot/skins";
-import { SHAPE_BY_ID } from "../bot/skins";
+import { mixHex, SHAPE_BY_ID } from "../bot/skins";
 import type { PlushDot, PlushZ } from "../plush/motion";
 import {
   BODY_COLUMNS,
@@ -11,6 +11,8 @@ import {
   type Material,
 } from "./catalogue";
 import { radialBodyWarp, silhouetteTransform } from "./warp";
+import { bodyParticles } from "./effects";
+import { enlargedEyes } from "./eyes";
 
 /** 无框架依赖的 SVG 绘图树，可由 React 或静态导出器使用。 */
 export interface SvgDrawing {
@@ -37,6 +39,7 @@ export function avatarDrawing(
   zs: PlushZ[],
   bodyTransform?: string,
   shape: ShapeId = "cercle",
+  time = 0,
 ): SvgDrawing[] {
   const url = (name: string) => `url(#${id}-${name})`;
   const path = (attributes: SvgDrawing["attributes"]) =>
@@ -73,6 +76,7 @@ export function avatarDrawing(
       viewBox: `${column * cellWidth} ${row * cellHeight} ${cellWidth} ${cellHeight}`,
       overflow: "hidden",
       preserveAspectRatio: "none",
+      opacity: material === "particles" ? 0.58 : undefined,
     },
     node("image", {
       "data-texture": "",
@@ -109,6 +113,32 @@ export function avatarDrawing(
             opacity: dot.opacity,
           }),
     );
+  const particles =
+    material === "particles" ? bodyParticles(frame.silhouette, time) : [];
+  const particleLayer = (back: boolean) =>
+    node(
+      "g",
+      {
+        "data-particle-layer": back ? "back" : "front",
+        transform: silhouetteTransform(frame.silhouette),
+        fill: url(back ? "particle-back" : "particle-front"),
+      },
+      ...particles
+        .filter((particle) => particle.back === back)
+        .map((particle) =>
+          node("circle", {
+            "data-material-particle": particle.index,
+            cx: particle.x,
+            cy: particle.y,
+            r: particle.r,
+            opacity: particle.opacity,
+            fill:
+              !particle.back && particle.light < 0.04
+                ? url("particle-shade")
+                : undefined,
+          }),
+        ),
+    );
   return [
     node(
       "defs",
@@ -138,6 +168,33 @@ export function avatarDrawing(
           floodOpacity: 0.22,
         }),
       ),
+      ...(material === "particles"
+        ? [
+            node(
+              "radialGradient",
+              { id: `${id}-particle-front`, cx: "50%", cy: "50%", r: "50%" },
+              stop(0, mixHex(color, "#ffffff", 0.75)),
+              stop(0.12, mixHex(color, "#ffffff", 0.3)),
+              stop(0.45, color),
+              stop(0.7, color, 0.85),
+              stop(1, color, 0),
+            ),
+            node(
+              "radialGradient",
+              { id: `${id}-particle-shade`, cx: "50%", cy: "50%", r: "50%" },
+              stop(0, mixHex(color, "#ffffff", 0.38)),
+              stop(0.2, color),
+              stop(0.6, mixHex(color, "#101020", 0.32)),
+              stop(1, mixHex(color, "#101020", 0.32), 0),
+            ),
+            node(
+              "radialGradient",
+              { id: `${id}-particle-back`, cx: "32%", cy: "26%", r: "75%" },
+              stop(0, mixHex(color, "#ffffff", 0.6)),
+              stop(1, mixHex(color, "#101020", 0.35)),
+            ),
+          ]
+        : []),
       ...frame.arcs.map((a) =>
         node(
           "linearGradient",
@@ -214,6 +271,7 @@ export function avatarDrawing(
         fill: color,
         opacity: texture ? 0 : 1,
       }),
+      ...(particles.length ? [particleLayer(true)] : []),
       ...(texture
         ? [
             node(
@@ -237,7 +295,8 @@ export function avatarDrawing(
             ),
           ]
         : []),
-      ...frame.eyes.map((eye, index) =>
+      ...(particles.length ? [particleLayer(false)] : []),
+      ...enlargedEyes(frame.eyes).map((eye, index) =>
         path({
           "data-eye": index,
           d: eye.d,
