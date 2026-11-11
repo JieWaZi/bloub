@@ -200,7 +200,7 @@ describe('etats', () => {
 
   it('tient les transitions d interface hors du catalogue', () => {
     const horsSequence = STATES.filter((s) => !SEQUENCE.includes(s.id)).map((s) => s.id)
-    expect(horsSequence).toEqual(['swirl'])
+    expect(horsSequence).toEqual(['swirl', 'working', 'waiting-answer', 'waiting-approval', 'unread'])
   })
 
   it('montre le visage sur les etats a visage, le cache sur les autres', () => {

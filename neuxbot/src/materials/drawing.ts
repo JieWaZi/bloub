@@ -13,6 +13,8 @@ import {
 import { radialBodyWarp, silhouetteTransform } from "./warp";
 import { bodyParticles } from "./effects";
 import { enlargedEyes } from "./eyes";
+import { drawAttention } from "./attention-drawing";
+import type { AttentionState } from "../bot/states";
 
 /** 无框架依赖的 SVG 绘图树，可由 React 或静态导出器使用。 */
 export interface SvgDrawing {
@@ -40,7 +42,16 @@ export function avatarDrawing(
   bodyTransform?: string,
   shape: ShapeId = "cercle",
   time = 0,
+  options: {
+    unreadCount?: number;
+    notificationColor?: string;
+    attentionColors?: Partial<Record<AttentionState, string>>;
+  } = {},
 ): SvgDrawing[] {
+  const notificationColor = options.notificationColor ?? (frame.notif?.attention ? color : NOTIF_BLUE);
+  const attention = frame.notif
+    ? drawAttention(frame.notif, frame.notch, options.unreadCount ?? 1, notificationColor, options.attentionColors)
+    : undefined;
   const url = (name: string) => `url(#${id}-${name})`;
   const path = (attributes: SvgDrawing["attributes"]) =>
     node("path", attributes);
@@ -213,7 +224,7 @@ export function avatarDrawing(
                 height: 316,
                 fill: "#fff",
               }),
-              node("circle", {
+              attention?.cutout ?? node("circle", {
                 cx: frame.notch.x,
                 cy: frame.notch.y,
                 r: frame.notch.r,
@@ -298,12 +309,12 @@ export function avatarDrawing(
     ),
     ...(frame.notif
       ? [
-          node("circle", {
+          attention ? node("g", { transform: bodyTransform }, attention.outline, attention.mark) : node("circle", {
             "data-native-notification": "",
             cx: frame.notif.x,
             cy: frame.notif.y,
             r: frame.notif.r,
-            fill: NOTIF_BLUE,
+            fill: notificationColor,
           }),
         ]
       : []),

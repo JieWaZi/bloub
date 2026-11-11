@@ -14,6 +14,7 @@ import {
 } from "./shape.js";
 import {
   STATE_BY_ID,
+  type AttentionMotion,
   type Pose,
   type StateDef,
   type StateId,
@@ -48,7 +49,7 @@ export interface BotFrame {
   /** true = les points passent derriere le corps (particules de l'eclatement) */
   dotsBehind: boolean;
   arcs: ArcRender[];
-  notif: { x: number; y: number; r: number } | null;
+  notif: { x: number; y: number; r: number; attention?: AttentionMotion } | null;
   notch: { x: number; y: number; r: number } | null;
 }
 
@@ -153,9 +154,34 @@ function blendPose(a: Pose, b: Pose, t: number): Pose {
       })),
       ...b.arcs.map((r) => ({ ...r, id: `b${r.id}`, opacity: r.opacity * t })),
     ],
-    // la pastille appartient a un seul des deux etats, elle ne se melange pas
-    notif: t < 0.5 ? a.notif : b.notif,
+    notif: blendNotification(a.notif, b.notif, t),
     dotsBehind: t < 0.5 ? a.dotsBehind : b.dotsBehind,
+  };
+}
+
+/** Les formes d'attention se replient sur le point commun avant de changer. */
+function blendNotification(a: Pose["notif"], b: Pose["notif"], t: number): Pose["notif"] {
+  const current = t < 0.5 ? a : b;
+  if (!a?.attention && !b?.attention) return current;
+  if (a && b && current) {
+    return {
+      x: lerp(a.x, b.x, t),
+      y: lerp(a.y, b.y, t),
+      r: lerp(a.r, b.r, t),
+      notch: lerp(a.notch, b.notch, t),
+      ...(current.attention ? {
+        attention: { ...current.attention, progress: current.attention.progress * Math.abs(2 * t - 1) },
+      } : {}),
+    };
+  }
+  const point = a ?? b;
+  const amount = a ? 1 - t : t;
+  if (!point?.attention || amount <= 0) return null;
+  return {
+    ...point,
+    r: point.r * amount,
+    notch: point.notch * amount,
+    attention: { ...point.attention, progress: point.attention.progress * amount },
   };
 }
 
@@ -720,7 +746,10 @@ export class BotEngine {
     const nFit = pose.notif ? bodyRadius(pose.notif.x, pose.notif.y) : 1;
     const nx = pose.notif ? (pose.notif.x * nFit + offX) * R : 0;
     const ny = pose.notif ? (pose.notif.y * nFit + offY) * R : 0;
-    const notif = pose.notif ? { x: nx, y: ny, r: pose.notif.r * R } : null;
+    const notif = pose.notif ? {
+      x: nx, y: ny, r: pose.notif.r * R,
+      ...(pose.notif.attention ? { attention: pose.notif.attention } : {}),
+    } : null;
     const notch = pose.notif ? { x: nx, y: ny, r: pose.notif.notch * R } : null;
 
     return {

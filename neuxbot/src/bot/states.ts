@@ -16,7 +16,7 @@ import {
   type DotRender
 } from './decor.js'
 import { EYE_H, EYE_SPLIT, EYE_W, REST_GAZE, type HeadGaze } from './face.js'
-import { TAU, clamp, easings } from './math.js'
+import { TAU, clamp, easings, lerp } from './math.js'
 import {
   circle,
   hullOfCircles,
@@ -42,6 +42,17 @@ export interface EyeCfg {
   tilt?: number
 }
 
+export const ATTENTION_STATES = ['working', 'waiting-answer', 'waiting-approval', 'unread'] as const
+export type AttentionState = (typeof ATTENTION_STATES)[number]
+
+export interface AttentionMotion {
+  kind: AttentionState
+  /** Progression depuis la pastille ronde vers la forme propre a l'etat. */
+  progress: number
+  /** Phase en radians du mouvement cyclique du corps et du symbole. */
+  phase: number
+}
+
 export interface Pose {
   /** silhouette du corps, en unites de rayon de boule */
   sil: Silhouette
@@ -58,7 +69,7 @@ export interface Pose {
   bodyAlpha: number
   dots: DotRender[]
   arcs: ArcSpec[]
-  notif: { x: number; y: number; r: number; notch: number } | null
+  notif: { x: number; y: number; r: number; notch: number; attention?: AttentionMotion } | null
   /** true = le decor passe derriere le corps (particules de l'eclatement) */
   dotsBehind: boolean
 }
@@ -162,6 +173,7 @@ export type StateId =
   | 'orbit'
   | 'burst'
   | 'comet'
+  | AttentionState
   /** transition d'interface, pas une animation du catalogue : hors `SEQUENCE` */
   | 'swirl'
 
@@ -201,6 +213,43 @@ export function dotPulse(t: number, index: number): number {
   const p = ((((t - index * 0.5) / 1.5) % 1) + 1) % 1
   const k = p < 0.5 ? 0.5 - 0.5 * Math.cos(p * TAU) : 0
   return clamp(k * 2)
+}
+
+const notifyGaze = { yaw: -21.94, pitch: -5.82, roll: -12.2 }
+
+function notificationPoint(r: number) {
+  const angle = NOTIF_ANGLE * Math.PI / 180
+  return { x: Math.cos(angle) * NOTIF_DIST, y: Math.sin(angle) * NOTIF_DIST, r, notch: r + NOTIF_MARGIN }
+}
+
+const attentionFaces: Record<AttentionState, HeadGaze> = {
+  working: { yaw: -16, pitch: -4, roll: -8 },
+  'waiting-answer': { yaw: -8, pitch: -12, roll: -20 },
+  'waiting-approval': { yaw: -5, pitch: 2, roll: -3 },
+  unread: { yaw: -15, pitch: -6, roll: -12 }
+}
+
+function attentionPose(kind: AttentionState, t: number): Pose {
+  const progress = easings.easeInOutCubic(clamp(t / 0.62))
+  const working = kind === 'working'
+  const phase = t * TAU / (working ? 1.35 : 2.4)
+  const breath = Math.sin(phase) * progress * (working ? 1 : 0.72)
+  const arrival = t < 0.78 ? Math.sin(clamp(t / 0.78) * Math.PI) : 0
+  const face = attentionFaces[kind]
+  const lean = (face.roll - notifyGaze.roll) * progress * Math.PI / 360
+  const scale = 1 + breath * 0.025 + arrival * 0.025
+  return base({
+    sil: circle(1, { rot: lean, sx: 1 / scale, sy: scale }),
+    offY: -breath * 0.034 - arrival * 0.042,
+    gaze: {
+      yaw: lerp(notifyGaze.yaw, face.yaw, progress) + breath * 3,
+      pitch: lerp(notifyGaze.pitch, face.pitch, progress) - arrival * 4,
+      roll: lerp(notifyGaze.roll, face.roll, progress)
+    },
+    split: 18.89,
+    eyes: pair(0.505, 0.498),
+    notif: { ...notificationPoint(NOTIF_R), attention: { kind, progress, phase } }
+  })
 }
 
 export const STATES: StateDef[] = [
@@ -326,18 +375,12 @@ export const STATES: StateDef[] = [
       const p = clamp(t / 0.45)
       const pop = 1 + (NOTIF_POP - 1) * Math.sin(p * Math.PI) * (1 - p * 0.35)
       const r = NOTIF_R * (p < 1 ? pop : 1)
-      const a = (NOTIF_ANGLE * Math.PI) / 180
       return base({
         // le regard part a l'oppose de la pastille
-        gaze: { yaw: -21.94, pitch: -5.82, roll: -12.2 },
+        gaze: { ...notifyGaze },
         split: 18.89,
         eyes: pair(0.505, 0.498),
-        notif: {
-          x: Math.cos(a) * NOTIF_DIST,
-          y: Math.sin(a) * NOTIF_DIST,
-          r,
-          notch: r + NOTIF_MARGIN
-        }
+        notif: notificationPoint(r)
       })
     }
   },
@@ -569,7 +612,16 @@ export const STATES: StateDef[] = [
         arcs: COMET_RIBBONS.map((s, i) => ({ id: `cm${i}`, seed: s, t, opacity: fade }))
       })
     }
-  }
+  },
+  ...ATTENTION_STATES.map((id): StateDef => ({
+    id,
+    duration: 2.4,
+    morph: 0.34,
+    blinkIn: false,
+    baseFace: false,
+    baseBody: true,
+    pose: (t) => attentionPose(id, t)
+  }))
 ]
 
 export const STATE_BY_ID = new Map(STATES.map((s) => [s.id, s]))
@@ -595,7 +647,11 @@ export const POSES: Record<StateId, number> = {
   orbit: 1.2,
   swirl: 0.5,
   burst: 0.45,
-  comet: 1.15
+  comet: 1.15,
+  working: 1.1,
+  'waiting-answer': 1.1,
+  'waiting-approval': 1.1,
+  unread: 1.1
 }
 
 export const SEQUENCE: StateId[] = [
