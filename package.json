@@ -1,10 +1,10 @@
 {
   "name": "@neuxbot/bloub",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "Framework-independent avatar geometry, expressions, motion and NeuxBot materials.",
-  "license": "MIT",
+  "license": "SEE LICENSE IN neuxbot/README.md",
   "author": "Jérémy Perret",
   "repository": {
     "type": "git",
@@ -29,7 +29,11 @@
     "./LICENSE.dsh-bloub-mood": "./neuxbot/LICENSE.dsh-bloub-mood",
     "./upstream.json": "./neuxbot/upstream.json",
     "./expressions-source.json": "./neuxbot/expressions-source.json",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./attention-drawing": "./neuxbot/src/materials/attention-drawing.ts",
+    "./material-texture": "./neuxbot/src/materials/texture.ts",
+    "./balloon": "./neuxbot/src/materials/balloon-renderer.js",
+    "./LICENSE.elastic-mesh": "./neuxbot/LICENSE.elastic-mesh"
   },
   "files": [
     "neuxbot/src",
@@ -38,12 +42,15 @@
     "neuxbot/LICENSE.dsh-bloub-mood",
     "neuxbot/upstream.json",
     "neuxbot/expressions-source.json",
-    "neuxbot/README.md"
+    "neuxbot/README.md",
+    "neuxbot/LICENSE.elastic-mesh",
+    "neuxbot/tools/generate-balloon-atlas.mjs"
   ],
   "scripts": {
     "materials:generate": "node neuxbot/tools/generate-particle-atlas.mjs",
     "materials:check": "node neuxbot/tools/generate-particle-atlas.mjs --check",
-    "test": "vitest run --config neuxbot/vitest.config.ts"
+    "test": "vitest run --config neuxbot/vitest.config.ts",
+    "materials:balloon": "node neuxbot/tools/generate-balloon-atlas.mjs"
   },
   "devDependencies": {
     "esbuild": "0.28.2",

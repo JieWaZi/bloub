@@ -1,11 +1,11 @@
 # NeuxBot Bloub
 
-这是 [JieWaZi/bloub](https://github.com/JieWaZi/bloub/tree/main) 维护的头像库实现，使用根目录 `@neuxbot/bloub` 包公开入口接入。固定上游来源见 [upstream.json](upstream.json)，消费方引用 `main` 分支，以锁文件固定解析提交，不复制源码。不引入 Vue 或 Solid 运行时。
+这是 [JieWaZi/bloub](https://github.com/JieWaZi/bloub/tree/main) 维护的头像库实现，使用根目录 `@neuxbot/bloub` 包公开入口接入。固定上游来源见 [upstream.json](upstream.json)，消费方引用发布到 `main` 的完整 Git 提交，并以锁文件固定安装结果，不复制源码。不引入 Vue 或 Solid 运行时。
 
 ## 职责
 
 - `src/bot`：原生轮廓、时间采样、眼睛和动作；保留原生 16 表情并新增 8 个原创姿态。
-- `src/materials`：原创身体图集目录、完整身体径向变形、少量细光点和框架无关 SVG 绘图树；复用上游脸部向内增长算法统一放大眼睛。
+- `src/materials`：身体图集目录、材质纹理准备、完整身体径向变形、少量细光点和框架无关 SVG 绘图树；复用上游脸部向内增长算法统一放大眼睛。`materialTexture` 统一准备毛绒、粒子和软胶，宿主不维护材质分支。软胶的充气高度场、摄影棚灯板、菲涅耳反射和透明纹理烘焙均由 `balloon-renderer.js` 拥有，临时 GPU 上下文在快照后释放，高度场在换色时复用。
 - `tools/generate-particle-atlas.mjs`：根据通用形状三维体积取样，生成细光尘 SVG 图集；运行时沿用单张纹理的准备与换色链。
 - `src/plush`：固定开源来源的换色和状态辅助纯函数；不包含第三方毛绒图片。
 - [materials](materials/README.md)：自有毛绒与 particles 完整立体身体、提示词与图格元数据。
@@ -15,3 +15,7 @@ NeuxBot 的 React 层负责资源就绪后的完整外观交接、可见性、�
 ## 维护
 
 在本仓库的 `neuxbot/` 目录修改和验证，再提交和推送。消费方更新包依赖的完整 Git 提交和锁文件；源仓库元数据不包含自引用提交号。更新时同步检查前端头像、状态编排、选择器与原生动作测试，保留 [MIT 许可](LICENSE) 和 [表情策略参考许可](LICENSE.dsh-bloub-mood)。
+
+## 许可
+
+Bloub 核心沿用 [MIT 许可](LICENSE)，表情策略参考保留[对应许可](LICENSE.dsh-bloub-mood)。软胶表面移植自 NeuxBot 开屏使用的 React Bits Elastic Mesh，适用 [MIT + Commons Clause 原许可](LICENSE.elastic-mesh)，不将其归为 Bloub 的 MIT 部分。消费应用需随包交付三份许可。

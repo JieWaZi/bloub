@@ -6,6 +6,7 @@
 | ---------------------------------------- | ------------------------ | ----------- | ------------------------------------------- |
 | [body-template.png](body-template.png)   | 原创几何轮廓与布局指导图 | 1264 × 948  | `neuxbot/materials/body-template.png`  |
 | [body-plush.png](body-plush.png)         | 中灰细短毛绒身体         | 1448 × 1086 | `neuxbot/materials/body-plush.png`     |
+| [body-balloon.svg](body-balloon.svg) | 软胶充气表面的轮廓遮罩 | 1448 × 1086 | `neuxbot/materials/body-balloon.svg` |
 | [body-particles.svg](body-particles.svg) | 中性灰银发光粒子身体     | 1448 × 1086 | `neuxbot/materials/body-particles.svg` |
 
 [sprites.json](sprites.json) 记录图集尺寸、行列与形状顺序。10 种形状依次为 `cercle`、`galet`、`squircle`、`capsule`、`triangle`、`hexagone`、`nuage`、`carre`、`losange`、`pentagone`。渲染器按格显示完整身体，保留绒毛和粒子边缘；颜色可以根据身体的中灰明暗映射。
@@ -40,4 +41,13 @@ Use case: style-transfer
 Edit the attached original geometry template into a clean transparent sprite atlas. Preserve the exact 4-column × 3-row layout, 4:3 canvas, the ten gray silhouettes' shapes, centers and sizes, and the two empty bottom-right cells. Each shape remains in its own cell with wide empty spacing. The template's alpha mask is authoritative: do not add anything at all outside the ten body silhouettes except a 1–2 pixel natural fur fringe directly touching the contour. Completely transparent padding, including every pixel of the two empty cells; actual RGBA zero-alpha, no backdrop.
 Replace each gray body with a thick, plump, fully three-dimensional short soft plush body in neutral medium gray, around RGB 140. Dense fine soft furry tufts bend around the inflated convex front and thick rolled sides; a tiny neat soft fur fringe follows the contour. Strict front orthographic view. Soft upper-left studio illumination, gentle light-gray front highlights, clearly darker gray lower-right self-shadows, natural fine material detail and strong rounded volume, like a premium tactile sculpted toy. Every body's interior is solid and fully opaque, not a translucent texture. Original materials, no existing character reference.
 Critical edge treatment: no white outer border, no white patches sticking out, no edge glow, no bloom, no light haze, no white fringe matte, no floating specks. Edge fibers/leaves use the body's own mid-gray color and dark self-shadow, never white halos. Do not depict a floor or any cast shadow. No eyes, mouth, face, nose, limbs, letters, text, outlines, frames, grid lines or labels. Do not paint a black, white, gray or checkerboard background. Output only the ten shaded bodies on real alpha transparency.
+```
+
+## 软胶
+
+`balloon` 使用同一组通用形状生成透明遮罩，`materialTexture` 将遮罩烘焙为完整的彩色亮面身体，采用左上清晰亮芯、柔和底光和右下短辅助反射，保留亮面软胶的光泽与层次，避免矩形高光压在面部中央，也不把地平线或细灯条映成整圈线条；不使用毛绒的灰度换色曲线。着色器与充气高度场的实现位于 [balloon-renderer.js](../src/materials/balloon-renderer.js)，来源与使用条件见 [原许可](../LICENSE.elastic-mesh)。同色图集可供宿主共用，所有形状和状态继续沿用已有的 SVG 径向变形，无需每个头像持有图形上下文。
+
+```sh
+node neuxbot/tools/generate-balloon-atlas.mjs
+node neuxbot/tools/generate-balloon-atlas.mjs --check
 ```

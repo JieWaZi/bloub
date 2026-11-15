@@ -25,6 +25,12 @@
       "width": 1448,
       "height": 1086,
       "visualScale": 1.2
+    },
+    "balloon": {
+      "file": "body-balloon.svg",
+      "width": 1448,
+      "height": 1086,
+      "visualScale": 1
     }
   }
 }

@@ -1,6 +1,6 @@
 import sprites from "../../materials/sprites.json";
-/** NeuxBot 原创立体身体目录；默认毛绒，另可选择粒子。 */
-export const MATERIALS = ["plush", "particles"] as const;
+/** 身体材质共用形状和原生形变；软胶由库内着色器准备完整彩色图集。 */
+export const MATERIALS = ["plush", "particles", "balloon"] as const;
 export type Material = (typeof MATERIALS)[number];
 export const PALETTE = [
   "#ef4444",
@@ -26,6 +26,7 @@ export const TEXTURES: Record<Material, string> = {
   plush: new URL("../../materials/body-plush.png", import.meta.url).href,
   particles: new URL("../../materials/body-particles.svg", import.meta.url)
     .href,
+  balloon: new URL("../../materials/body-balloon.svg", import.meta.url).href,
 };
 export const BODY_SHAPES = sprites.shapes;
 export const BODY_COLUMNS = sprites.columns;
