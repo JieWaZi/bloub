@@ -1,7 +1,7 @@
 {
   "name": "@neuxbot/bloub",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "module",
   "description": "Framework-independent avatar geometry, expressions, motion and NeuxBot materials.",
   "license": "SEE LICENSE IN neuxbot/README.md",

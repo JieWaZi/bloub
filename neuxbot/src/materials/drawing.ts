@@ -13,6 +13,7 @@ import {
 import { radialBodyWarp, silhouetteTransform } from "./warp";
 import { bodyParticles } from "./effects";
 import { enlargedEyes } from "./eyes";
+import { alignMaterialDrawing } from "./layout";
 import { drawAttention } from "./attention-drawing";
 import type { AttentionState } from "../bot/states";
 
@@ -145,7 +146,7 @@ export function avatarDrawing(
           }),
         ),
     );
-  return [
+  const drawing = [
     node(
       "defs",
       {},
@@ -319,4 +320,5 @@ export function avatarDrawing(
         ]
       : []),
   ];
+  return alignMaterialDrawing(drawing, material, shape);
 }

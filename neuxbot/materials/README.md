@@ -45,7 +45,7 @@ Critical edge treatment: no white outer border, no white patches sticking out, n
 
 ## 软胶
 
-`balloon` 使用同一组通用形状生成透明遮罩，`materialTexture` 将遮罩烘焙为完整的彩色亮面身体，采用左上清晰亮芯、柔和底光和右下短辅助反射，保留亮面软胶的光泽与层次，避免矩形高光压在面部中央，也不把地平线或细灯条映成整圈线条；不使用毛绒的灰度换色曲线。着色器与充气高度场的实现位于 [balloon-renderer.js](../src/materials/balloon-renderer.js)，来源与使用条件见 [原许可](../LICENSE.elastic-mesh)。同色图集可供宿主共用，所有形状和状态继续沿用已有的 SVG 径向变形，无需每个头像持有图形上下文。
+`balloon` 使用同一组通用形状生成透明遮罩，`materialTexture` 将遮罩烘焙为完整的彩色亮面身体，采用左上清晰亮芯、柔和底光和右下短辅助反射，保留亮面软胶的光泽与层次，避免矩形高光压在面部中央，也不把地平线或细灯条映成整圈线条；不使用毛绒的灰度换色曲线。着色器与充气高度场的实现位于 [balloon-renderer.js](../src/materials/balloon-renderer.js)，来源与使用条件见 [原许可](../LICENSE.elastic-mesh)。同色图集可供宿主共用，三种材质在库内按同一形状的毛绒主体边界校准尺寸和中心，只变换身体，不改变眼睛坐标；所有形状和状态继续沿用已有的 SVG 径向变形，无需每个头像持有图形上下文。
 
 ```sh
 node neuxbot/tools/generate-balloon-atlas.mjs
