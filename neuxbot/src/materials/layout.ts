@@ -1,109 +1,56 @@
-import type { Material } from "./catalogue";
 import type { ShapeId } from "../bot/skins";
-import type { SvgDrawing } from "./drawing";
 
 type Bounds = readonly [number, number, number, number];
 
-// 当前 362px 图格中 alpha > 100 的可见边界（含端点），不计稀疏微尘。
-// 所有材质匹配毛绒图集的主体边界和中心；校准只作用于身体，不移动面部或外层视域。
-const bodyBounds: Partial<Record<ShapeId, Record<Material, Bounds>>> = {
-  cercle: {
-    plush: [52, 52, 301, 304],
-    particles: [66, 66, 294, 295],
-    balloon: [66, 66, 295, 295],
-  },
-  galet: {
-    plush: [43, 74, 296, 291],
-    particles: [65, 82, 293, 283],
-    balloon: [66, 83, 293, 283],
-  },
-  squircle: {
-    plush: [41, 61, 287, 299],
-    particles: [70, 70, 290, 291],
-    balloon: [71, 71, 290, 290],
-  },
-  capsule: {
-    plush: [32, 98, 296, 263],
-    particles: [62, 109, 299, 252],
-    balloon: [62, 110, 299, 251],
-  },
-  triangle: {
-    plush: [45, 27, 305, 264],
-    particles: [66, 52, 297, 265],
-    balloon: [64, 52, 297, 264],
-  },
-  hexagone: {
-    plush: [39, 38, 306, 280],
-    particles: [62, 73, 298, 288],
-    balloon: [62, 74, 299, 287],
-  },
-  nuage: {
-    plush: [35, 55, 293, 277],
-    particles: [69, 91, 290, 283],
-    balloon: [69, 92, 290, 283],
-  },
-  carre: {
-    plush: [40, 37, 289, 282],
-    particles: [75, 75, 286, 286],
-    balloon: [76, 76, 285, 285],
-  },
-  losange: {
-    plush: [35, 16, 313, 299],
-    particles: [50, 50, 310, 310],
-    balloon: [50, 50, 311, 311],
-  },
-  pentagone: {
-    plush: [37, 23, 306, 282],
-    particles: [62, 57, 298, 287],
-    balloon: [62, 58, 299, 287],
-  },
+/** Canonical shape bounds in the avatar's local geometry coordinates. */
+const shapeBounds: Partial<Record<ShapeId, Bounds>> = {
+  cercle: [
+    -112.60773480662984, -112.60773480662984, 105.62430939226522,
+    108.24309392265195,
+  ],
+  galet: [
+    -120.46408839779005, -93.40331491712708, 101.25966850828729,
+    96.89502762430939,
+  ],
+  squircle: [
+    -122.20994475138122, -104.75138121546962, 93.40331491712706,
+    103.87845303867402,
+  ],
+  capsule: [
+    -130.06629834254144, -72.45303867403315, 101.25966850828729,
+    72.45303867403314,
+  ],
+  triangle: [
+    -118.71823204419888, -134.43093922651934, 109.11602209944749,
+    73.32596685082873,
+  ],
+  hexagone: [
+    -123.95580110497238, -124.82872928176795, 109.98895027624309,
+    87.292817679558,
+  ],
+  nuage: [
+    -127.4475138121547, -109.98895027624309, 98.64088397790056,
+    84.67403314917127,
+  ],
+  carre: [
+    -123.0828729281768, -125.70165745856355, 95.14917127071823,
+    89.03867403314916,
+  ],
+  losange: [
+    -127.4475138121547, -144.0331491712707, 116.09944751381215,
+    103.87845303867402,
+  ],
+  pentagone: [
+    -125.70165745856355, -137.92265193370167, 109.98895027624309,
+    89.03867403314916,
+  ],
 };
+const defaultBounds: Bounds = [
+  -100.38674033149172, -100.38674033149172, 100.3867403314917,
+  100.3867403314917,
+];
 
-/** Canonical alpha-visible body bounds shared by every calibrated material. */
+/** All materials share one body surface without moving native face coordinates. */
 export function bodySurfaceBounds(shape: ShapeId): Bounds {
-  const bounds = bodyBounds[shape]?.plush ?? [66, 66, 295, 295];
-  return [
-    (bounds[0] * 316) / 362 - 158,
-    (bounds[1] * 316) / 362 - 158,
-    ((bounds[2] + 1) * 316) / 362 - 158,
-    ((bounds[3] + 1) * 316) / 362 - 158,
-  ];
-}
-
-/** 在原生形变之前校准图格，保持眼睛、眨眼和动作坐标不受材质影响。 */
-export function alignMaterialDrawing(
-  drawing: SvgDrawing[],
-  material: Material,
-  shape: ShapeId,
-): SvgDrawing[] {
-  const bounds = bodyBounds[shape];
-  if (material === "plush" || !bounds) return drawing;
-  const target = bounds.plush;
-  const source = bounds[material];
-  const sx = (target[2] - target[0] + 1) / (source[2] - source[0] + 1);
-  const sy = (target[3] - target[1] + 1) / (source[3] - source[1] + 1);
-  const center = (min: number, max: number) =>
-    (((min + max + 1) / 2 - 181) * 316) / 362;
-  const x = center(target[0], target[2]) - center(source[0], source[2]) * sx;
-  const y = center(target[1], target[3]) - center(source[1], source[3]) * sy;
-  const align = (node: SvgDrawing): SvgDrawing => ({
-    ...node,
-    attributes:
-      node.attributes["data-body-sprite"] !== undefined
-        ? {
-            ...node.attributes,
-            x: -158 * sx + x,
-            y: -158 * sy + y,
-            width: 316 * sx,
-            height: 316 * sy,
-          }
-        : node.attributes["data-particle-layer"] !== undefined
-          ? {
-              ...node.attributes,
-              transform: `translate(${x},${y}) scale(${sx},${sy})`,
-            }
-          : node.attributes,
-    children: node.children.map(align),
-  });
-  return drawing.map(align);
+  return shapeBounds[shape] ?? defaultBounds;
 }

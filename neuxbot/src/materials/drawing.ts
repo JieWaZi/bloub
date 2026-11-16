@@ -1,22 +1,12 @@
 import type { BotFrame } from "../bot/engine";
 import { NOTIF_BLUE } from "../bot/decor";
 import type { ShapeId } from "../bot/skins";
-import { mixHex, SHAPE_BY_ID } from "../bot/skins";
 import type { PlushDot, PlushZ } from "../plush/motion";
-import {
-  BODY_COLUMNS,
-  BODY_ROWS,
-  BODY_SHAPES,
-  BODY_SPRITES,
-  type Material,
-} from "./catalogue";
-import { radialBodyWarp, silhouetteTransform } from "./warp";
-import { bodyParticles } from "./effects";
-import { enlargedEyes } from "./eyes";
-import { alignMaterialDrawing } from "./layout";
+import type { Material } from "./catalogue";
+import { solidShapeDrawing } from "./solid";
 import { drawAttention } from "./attention-drawing";
 import type { AttentionState } from "../bot/states";
-import { bodyDepthProjection, type BodyOrientation } from "./depth";
+import type { BodyOrientation } from "./depth";
 
 export {
   pointerOrientation,
@@ -43,13 +33,13 @@ const node = (
 const stop = (offset: number, color: string, opacity = 1) =>
   node("stop", { offset, stopColor: color, stopOpacity: opacity });
 
-/** 保留材质的光照和透明软边；有朝向时贴到闭合曲面后重新投影。 */
+/** 静止和动态共用闭合实体、全表面材质与曲面眼睛。 */
 export function avatarDrawing(
   frame: BotFrame,
   material: Material,
   color: string,
   id: string,
-  texture: string | undefined,
+  _texture: string | undefined,
   dots: PlushDot[],
   zs: PlushZ[],
   bodyTransform?: string,
@@ -59,7 +49,7 @@ export function avatarDrawing(
     unreadCount?: number;
     notificationColor?: string;
     attentionColors?: Partial<Record<AttentionState, string>>;
-    /** 身体三维朝向；眼睛由调用方以同一朝向驱动原生 setLook。 */
+    /** 整个实体与附着眼睛的朝向；调用方不再为同一朝向改写 setLook。 */
     bodyOrientation?: BodyOrientation;
   } = {},
 ): SvgDrawing[] {
@@ -88,50 +78,6 @@ export function avatarDrawing(
         strokeLinecap: "round",
       }),
     );
-  const index = Math.max(
-    0,
-    BODY_SHAPES.findIndex((item) => item === shape),
-  );
-  const column = index % BODY_COLUMNS;
-  const row = Math.floor(index / BODY_COLUMNS);
-  const atlas = BODY_SPRITES[material];
-  const cellWidth = atlas.width / BODY_COLUMNS;
-  const cellHeight = atlas.height / BODY_ROWS;
-  const sprite = node(
-    "svg",
-    {
-      "data-body-sprite": shape,
-      "data-companion-avatar": "",
-      x: -158,
-      y: -158,
-      width: 316,
-      height: 316,
-      viewBox: `${column * cellWidth} ${row * cellHeight} ${cellWidth} ${cellHeight}`,
-      overflow: "hidden",
-      preserveAspectRatio: "none",
-    },
-    node("image", {
-      "data-texture": "",
-      href: texture,
-      x: 0,
-      y: 0,
-      width: atlas.width,
-      height: atlas.height,
-      preserveAspectRatio: "none",
-    }),
-  );
-  const depth = bodyDepthProjection(
-    shape,
-    frame.silhouette,
-    options.bodyOrientation,
-  );
-  const slices =
-    texture && !depth
-      ? radialBodyWarp(
-          SHAPE_BY_ID.get(shape)?.radii ?? frame.silhouette.radii,
-          frame.silhouette.radii,
-        )
-      : [];
   const nativeDots = () =>
     frame.dots.map((dot, index) =>
       dot.d
@@ -151,57 +97,10 @@ export function avatarDrawing(
             opacity: dot.opacity,
           }),
     );
-  const particles =
-    material === "particles" ? bodyParticles(frame.silhouette, time) : [];
-  const particleLayer = (back: boolean) =>
-    node(
-      "g",
-      {
-        "data-particle-layer": back ? "back" : "front",
-        transform: silhouetteTransform(frame.silhouette),
-        fill: mixHex(color, "#ffffff", back ? 0.35 : 0.72),
-      },
-      ...particles
-        .filter((particle) => particle.back === back)
-        .map((particle) =>
-          node("circle", {
-            "data-material-particle": particle.index,
-            cx: particle.x,
-            cy: particle.y,
-            r: particle.r,
-            opacity: particle.opacity,
-          }),
-        ),
-    );
   const drawing = [
     node(
       "defs",
       {},
-      node(
-        "linearGradient",
-        { id: `${id}-eye`, x1: 0, y1: 0, x2: 1, y2: 1 },
-        stop(0, "#fffdf1"),
-        stop(0.5, "#fff8db"),
-        stop(1, "#b8ac8f"),
-      ),
-      node(
-        "filter",
-        {
-          id: `${id}-eye-depth`,
-          x: "-100%",
-          y: "-100%",
-          width: "300%",
-          height: "300%",
-          colorInterpolationFilters: "sRGB",
-        },
-        node("feDropShadow", {
-          dx: 0.6,
-          dy: 1,
-          stdDeviation: 0.8,
-          floodColor: "#2b1d25",
-          floodOpacity: 0.22,
-        }),
-      ),
       ...frame.arcs.map((a) =>
         node(
           "linearGradient",
@@ -218,31 +117,6 @@ export function avatarDrawing(
           ),
         ),
       ),
-      ...((depth && texture) || slices.length
-        ? [
-            node("g", { id: `${id}-sprite` }, sprite),
-            ...(depth?.patches.map((patch, index) =>
-              node(
-                "clipPath",
-                {
-                  id: `${id}-depth-${index}`,
-                  clipPathUnits: "userSpaceOnUse",
-                },
-                node("path", { d: patch.clipPath }),
-              ),
-            ) ?? []),
-            ...slices.map((slice, index) =>
-              node(
-                "clipPath",
-                {
-                  id: `${id}-sector-${index}`,
-                  clipPathUnits: "userSpaceOnUse",
-                },
-                node("polygon", { points: slice.points }),
-              ),
-            ),
-          ]
-        : []),
       ...(frame.notch
         ? [
             node(
@@ -283,65 +157,14 @@ export function avatarDrawing(
         "data-body-material": material,
         mask: frame.notch ? url("notification-cut") : undefined,
       },
-      path({
-        "data-body": "",
-        "data-depth-surface": depth ? "" : undefined,
-        d: depth?.surfacePath ?? frame.bodyPath,
-        transform: depth ? silhouetteTransform(frame.silhouette) : undefined,
-        fill: color,
-        opacity: texture ? 0 : 1,
-      }),
-      ...(particles.length ? [particleLayer(true)] : []),
-      ...(texture
-        ? [
-            node(
-              "g",
-              {
-                transform: silhouetteTransform(frame.silhouette),
-                "data-body-warp": slices.length ? "radial-svg" : undefined,
-                "data-body-depth": depth ? "loft-svg" : undefined,
-                style: depth ? { isolation: "isolate" } : undefined,
-              },
-              ...(depth
-                ? depth.patches.map((patch, index) =>
-                    node(
-                      "g",
-                      {
-                        clipPath: `url(#${id}-depth-${index})`,
-                        style: { mixBlendMode: "plus-lighter" },
-                      },
-                      node("use", {
-                        "data-depth-triangle": index,
-                        href: `#${id}-sprite`,
-                        transform: patch.matrix,
-                      }),
-                    ),
-                  )
-                : slices.length
-                  ? slices.map((slice, index) =>
-                      node(
-                        "g",
-                        { clipPath: `url(#${id}-sector-${index})` },
-                        node("use", {
-                          href: `#${id}-sprite`,
-                          transform: slice.matrix,
-                        }),
-                      ),
-                    )
-                  : [sprite]),
-            ),
-          ]
-        : []),
-      ...(particles.length ? [particleLayer(false)] : []),
-      ...enlargedEyes(frame.eyes).map((eye, index) =>
-        path({
-          "data-eye": index,
-          d: eye.d,
-          transform: eye.matrix,
-          opacity: eye.alpha,
-          fill: url("eye"),
-          filter: url("eye-depth"),
-        }),
+      ...solidShapeDrawing(
+        frame,
+        material,
+        color,
+        id,
+        options.bodyOrientation ?? { yaw: 0, pitch: 0 },
+        time,
+        shape,
       ),
     ),
     ...arc("front"),
@@ -384,5 +207,5 @@ export function avatarDrawing(
         ]
       : []),
   ];
-  return alignMaterialDrawing(drawing, material, shape);
+  return drawing;
 }
