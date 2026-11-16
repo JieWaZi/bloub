@@ -59,6 +59,17 @@ const bodyBounds: Partial<Record<ShapeId, Record<Material, Bounds>>> = {
   },
 };
 
+/** Canonical alpha-visible body bounds shared by every calibrated material. */
+export function bodySurfaceBounds(shape: ShapeId): Bounds {
+  const bounds = bodyBounds[shape]?.plush ?? [66, 66, 295, 295];
+  return [
+    (bounds[0] * 316) / 362 - 158,
+    (bounds[1] * 316) / 362 - 158,
+    ((bounds[2] + 1) * 316) / 362 - 158,
+    ((bounds[3] + 1) * 316) / 362 - 158,
+  ];
+}
+
 /** 在原生形变之前校准图格，保持眼睛、眨眼和动作坐标不受材质影响。 */
 export function alignMaterialDrawing(
   drawing: SvgDrawing[],

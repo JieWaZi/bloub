@@ -16,12 +16,24 @@ import { enlargedEyes } from "./eyes";
 import { alignMaterialDrawing } from "./layout";
 import { drawAttention } from "./attention-drawing";
 import type { AttentionState } from "../bot/states";
+import { bodyDepthProjection, type BodyOrientation } from "./depth";
+
+export {
+  pointerOrientation,
+  dampOrientation,
+  type BodyOrientation,
+} from "./depth";
 
 /** 无框架依赖的 SVG 绘图树，可由 React 或静态导出器使用。 */
 export interface SvgDrawing {
   tag: string;
-  attributes: Record<string, string | number | undefined>;
+  attributes: Record<string, string | number | SvgDrawingStyle | undefined>;
   children: SvgDrawing[];
+}
+/** Serializable CSS declarations accepted by both DOM and static SVG adapters. */
+export interface SvgDrawingStyle {
+  isolation?: "isolate";
+  mixBlendMode?: "plus-lighter";
 }
 const node = (
   tag: string,
@@ -31,7 +43,7 @@ const node = (
 const stop = (offset: number, color: string, opacity = 1) =>
   node("stop", { offset, stopColor: color, stopOpacity: opacity });
 
-/** 身体本身已经包含体积、光照与柔软边缘；只取图集对应格，不裁切为平面轮廓。 */
+/** 保留材质的光照和透明软边；有朝向时贴到闭合曲面后重新投影。 */
 export function avatarDrawing(
   frame: BotFrame,
   material: Material,
@@ -47,11 +59,20 @@ export function avatarDrawing(
     unreadCount?: number;
     notificationColor?: string;
     attentionColors?: Partial<Record<AttentionState, string>>;
+    /** 身体三维朝向；眼睛由调用方以同一朝向驱动原生 setLook。 */
+    bodyOrientation?: BodyOrientation;
   } = {},
 ): SvgDrawing[] {
-  const notificationColor = options.notificationColor ?? (frame.notif?.attention ? color : NOTIF_BLUE);
+  const notificationColor =
+    options.notificationColor ?? (frame.notif?.attention ? color : NOTIF_BLUE);
   const attention = frame.notif
-    ? drawAttention(frame.notif, frame.notch, options.unreadCount ?? 1, notificationColor, options.attentionColors)
+    ? drawAttention(
+        frame.notif,
+        frame.notch,
+        options.unreadCount ?? 1,
+        notificationColor,
+        options.attentionColors,
+      )
     : undefined;
   const url = (name: string) => `url(#${id}-${name})`;
   const path = (attributes: SvgDrawing["attributes"]) =>
@@ -99,12 +120,18 @@ export function avatarDrawing(
       preserveAspectRatio: "none",
     }),
   );
-  const slices = texture
-    ? radialBodyWarp(
-        SHAPE_BY_ID.get(shape)?.radii ?? frame.silhouette.radii,
-        frame.silhouette.radii,
-      )
-    : [];
+  const depth = bodyDepthProjection(
+    shape,
+    frame.silhouette,
+    options.bodyOrientation,
+  );
+  const slices =
+    texture && !depth
+      ? radialBodyWarp(
+          SHAPE_BY_ID.get(shape)?.radii ?? frame.silhouette.radii,
+          frame.silhouette.radii,
+        )
+      : [];
   const nativeDots = () =>
     frame.dots.map((dot, index) =>
       dot.d
@@ -191,9 +218,19 @@ export function avatarDrawing(
           ),
         ),
       ),
-      ...(slices.length
+      ...((depth && texture) || slices.length
         ? [
             node("g", { id: `${id}-sprite` }, sprite),
+            ...(depth?.patches.map((patch, index) =>
+              node(
+                "clipPath",
+                {
+                  id: `${id}-depth-${index}`,
+                  clipPathUnits: "userSpaceOnUse",
+                },
+                node("path", { d: patch.clipPath }),
+              ),
+            ) ?? []),
             ...slices.map((slice, index) =>
               node(
                 "clipPath",
@@ -225,12 +262,13 @@ export function avatarDrawing(
                 height: 316,
                 fill: "#fff",
               }),
-              attention?.cutout ?? node("circle", {
-                cx: frame.notch.x,
-                cy: frame.notch.y,
-                r: frame.notch.r,
-                fill: "#000",
-              }),
+              attention?.cutout ??
+                node("circle", {
+                  cx: frame.notch.x,
+                  cy: frame.notch.y,
+                  r: frame.notch.r,
+                  fill: "#000",
+                }),
             ),
           ]
         : []),
@@ -247,7 +285,9 @@ export function avatarDrawing(
       },
       path({
         "data-body": "",
-        d: frame.bodyPath,
+        "data-depth-surface": depth ? "" : undefined,
+        d: depth?.surfacePath ?? frame.bodyPath,
+        transform: depth ? silhouetteTransform(frame.silhouette) : undefined,
         fill: color,
         opacity: texture ? 0 : 1,
       }),
@@ -259,19 +299,36 @@ export function avatarDrawing(
               {
                 transform: silhouetteTransform(frame.silhouette),
                 "data-body-warp": slices.length ? "radial-svg" : undefined,
+                "data-body-depth": depth ? "loft-svg" : undefined,
+                style: depth ? { isolation: "isolate" } : undefined,
               },
-              ...(slices.length
-                ? slices.map((slice, index) =>
+              ...(depth
+                ? depth.patches.map((patch, index) =>
                     node(
                       "g",
-                      { clipPath: `url(#${id}-sector-${index})` },
+                      {
+                        clipPath: `url(#${id}-depth-${index})`,
+                        style: { mixBlendMode: "plus-lighter" },
+                      },
                       node("use", {
+                        "data-depth-triangle": index,
                         href: `#${id}-sprite`,
-                        transform: slice.matrix,
+                        transform: patch.matrix,
                       }),
                     ),
                   )
-                : [sprite]),
+                : slices.length
+                  ? slices.map((slice, index) =>
+                      node(
+                        "g",
+                        { clipPath: `url(#${id}-sector-${index})` },
+                        node("use", {
+                          href: `#${id}-sprite`,
+                          transform: slice.matrix,
+                        }),
+                      ),
+                    )
+                  : [sprite]),
             ),
           ]
         : []),
@@ -310,13 +367,20 @@ export function avatarDrawing(
     ),
     ...(frame.notif
       ? [
-          attention ? node("g", { transform: bodyTransform }, attention.outline, attention.mark) : node("circle", {
-            "data-native-notification": "",
-            cx: frame.notif.x,
-            cy: frame.notif.y,
-            r: frame.notif.r,
-            fill: notificationColor,
-          }),
+          attention
+            ? node(
+                "g",
+                { transform: bodyTransform },
+                attention.outline,
+                attention.mark,
+              )
+            : node("circle", {
+                "data-native-notification": "",
+                cx: frame.notif.x,
+                cy: frame.notif.y,
+                r: frame.notif.r,
+                fill: notificationColor,
+              }),
         ]
       : []),
   ];
