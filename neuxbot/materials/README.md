@@ -1,11 +1,11 @@
 # 通用头像身体图集
 
-[body-plush.png](body-plush.png) 与 [body-particles.svg](body-particles.svg) 是完整立体身体图集。每张采用 4 列 × 3 行等大方格，按行排列 10 种几何形状，末尾两格不放置身体。每个身体包含凸起前表面、圆润侧缘、左上柔光与右下自身暗部，无面部、肢体或地面投影。
+[body-plush.png](body-plush.png) 与 [body-particles.svg](body-particles.svg) 是完整立体身体图集。每张采用 4 列 × 3 行等大方格，按行排列 10 种几何形状，末尾两格不放置身体。每个身体包含凸起前表面、圆润侧缘、左上柔光与右下自身暗部，无面部、肢体或地面投影。毛绒采用清晰的短密卷绒簇与纤维间微阴影，在 40px 缩略图中保留材质层次。
 
 | 文件                                     | 用途                     | 实际尺寸    | 仓库输出路径                                |
 | ---------------------------------------- | ------------------------ | ----------- | ------------------------------------------- |
 | [body-template.png](body-template.png)   | 原创几何轮廓与布局指导图 | 1264 × 948  | `neuxbot/materials/body-template.png`  |
-| [body-plush.png](body-plush.png)         | 中灰细短毛绒身体         | 1448 × 1086 | `neuxbot/materials/body-plush.png`     |
+| [body-plush.png](body-plush.png)         | 中灰短密卷绒身体         | 1448 × 1086 | `neuxbot/materials/body-plush.png`     |
 | [body-balloon.svg](body-balloon.svg) | 软胶充气表面的轮廓遮罩 | 1448 × 1086 | `neuxbot/materials/body-balloon.svg` |
 | [body-particles.svg](body-particles.svg) | 中性灰银发光粒子身体     | 1448 × 1086 | `neuxbot/materials/body-particles.svg` |
 
@@ -13,7 +13,7 @@
 
 `visualScale` 只补偿显示时的视觉体积，不改变图集或头像布局槽：毛绒为 1，粒子为 1.2。粒子微尘透明度使同样边界的可见面积较小，整体视域放大 20% 后，身体、眼睛和状态动作仍保持相同比例。
 
-粒子材质是由三维球内细光尘投影生成的原生 SVG 图集。核心因前后光点叠加而浓密，边缘自然稀疏；光照按深度和左上方向计算，没有实心表面、珍珠或凸点基底。微点按深度、明暗、透明度和直径合批为路径，经过已有换色与缓存链路只解码一次，不在运行时逐点创建 React 节点。[effects.ts](../src/materials/effects.ts) 只补少量细光点，以调用方已有绘图时钟缓慢漂移和闪烁；128px 头像中的单点直径小于 1px。[drawing.ts](../src/materials/drawing.ts) 保留图集正常透明度和径向形变，最后绘制眼睛，不擦除眼睛周围的细点。毛绒继续直接使用原始完整图集。
+粒子材质是由三维球内细光尘投影生成的原生 SVG 图集。核心因前后光点叠加而浓密，边缘自然稀疏；光照按深度和左上方向计算，没有实心表面、珍珠或凸点基底。微点按深度、明暗、透明度和直径合批为路径，经过已有换色与缓存链路只解码一次，不在运行时逐点创建 React 节点。[effects.ts](../src/materials/effects.ts) 只补少量细光点，以调用方已有绘图时钟缓慢漂移和闪烁；128px 头像中的单点直径小于 1px。[drawing.ts](../src/materials/drawing.ts) 保留图集正常透明度和径向形变，最后绘制眼睛，不擦除眼睛周围的细点。毛绒继续使用完整图集；`layout.ts` 按实测主体边界消除图格的不对称留白，三种材质使用独立于素材版本的目标尺寸，眼睛、外层视域与原生动作坐标保持不变。
 
 重新生成与检查：
 
@@ -37,15 +37,12 @@ node neuxbot/tools/generate-particle-atlas.mjs --check
 ### body-plush.png
 
 ```text
-Use case: style-transfer
-Edit the attached original geometry template into a clean transparent sprite atlas. Preserve the exact 4-column × 3-row layout, 4:3 canvas, the ten gray silhouettes' shapes, centers and sizes, and the two empty bottom-right cells. Each shape remains in its own cell with wide empty spacing. The template's alpha mask is authoritative: do not add anything at all outside the ten body silhouettes except a 1–2 pixel natural fur fringe directly touching the contour. Completely transparent padding, including every pixel of the two empty cells; actual RGBA zero-alpha, no backdrop.
-Replace each gray body with a thick, plump, fully three-dimensional short soft plush body in neutral medium gray, around RGB 140. Dense fine soft furry tufts bend around the inflated convex front and thick rolled sides; a tiny neat soft fur fringe follows the contour. Strict front orthographic view. Soft upper-left studio illumination, gentle light-gray front highlights, clearly darker gray lower-right self-shadows, natural fine material detail and strong rounded volume, like a premium tactile sculpted toy. Every body's interior is solid and fully opaque, not a translucent texture. Original materials, no existing character reference.
-Critical edge treatment: no white outer border, no white patches sticking out, no edge glow, no bloom, no light haze, no white fringe matte, no floating specks. Edge fibers/leaves use the body's own mid-gray color and dark self-shadow, never white halos. Do not depict a floor or any cast shadow. No eyes, mouth, face, nose, limbs, letters, text, outlines, frames, grid lines or labels. Do not paint a black, white, gray or checkerboard background. Output only the ten shaded bodies on real alpha transparency.
+Use case: style-transfer. Production asset: grayscale plush body sprite atlas for small 3D avatars. Image 1 is the authoritative geometry and sprite layout target to transform. Image 2 is ONLY a tactile material reference: use the fuzzy vivid pink and yellow avatars on the LEFT window as guidance for clearly visible short plush pile, rounded thick inflated volume, and strong soft 3D lighting; ignore the entire interface and all eyes, and ignore the glossy green avatar on the right. Re-render Image 1 as original neutral medium-gray plush bodies. EXACT same 4-column x 3-row equal-square-cell grid on a 4:3 canvas; ten shapes in row-major order: circle, tilted oval pebble, squircle, horizontal capsule; rounded upright triangle, rounded hexagon, cloud, rounded square; rounded diamond, rounded pentagon, EMPTY, EMPTY. Retain each template silhouette, per-cell geometric center and size precisely; do not shift the objects upward. Center the visible body within each cell including its fur. Shapes stay well separated and the final two cells remain completely empty transparent. Front orthographic view of thick plump cushions with domed faces and rolled sides, not flat cutouts. Make the tactile material dramatically clearer than fine wispy hair: dense short curly wool/boucle tufts, compact velvety 3D clusters and small fiber curls, visible micro-shadow crevices between tufts, clean fuzzy edge with short soft fibers. Tufts must remain readable when each character is reduced to 40px, slightly stylized premium plush toy photography. Consistent broad upper-left softbox highlight and distinct lower-right self-shadow giving depth; light-gray highlights around RGB 185-205, mid-gray body around RGB 140, deep gray self-shadow around RGB 65-90. No clipping to white or black. Pure neutral grayscale for recoloring, no colored tint. Full body opaque with real alpha transparency all around; no background of any kind. NO eyes, faces, limbs, text, grids, borders, props, floating dust, ground shadows, halo, white matte, or flat felt sheets. Output one clean transparent RGBA atlas only.
 ```
 
 ## 软胶
 
-`balloon` 使用同一组通用形状生成透明遮罩，`materialTexture` 将遮罩烘焙为完整的彩色亮面身体，采用左上清晰亮芯、柔和底光和右下短辅助反射，保留亮面软胶的光泽与层次，避免矩形高光压在面部中央，也不把地平线或细灯条映成整圈线条；不使用毛绒的灰度换色曲线。着色器与充气高度场的实现位于 [balloon-renderer.js](../src/materials/balloon-renderer.js)，来源与使用条件见 [原许可](../LICENSE.elastic-mesh)。同色图集可供宿主共用，三种材质在库内按同一形状的毛绒主体边界校准尺寸和中心，只变换身体，不改变眼睛坐标；所有形状和状态继续沿用已有的 SVG 径向变形，无需每个头像持有图形上下文。
+`balloon` 使用同一组通用形状生成透明遮罩，`materialTexture` 将遮罩烘焙为完整的彩色亮面身体，采用左上清晰亮芯、柔和底光和右下短辅助反射，保留亮面软胶的光泽与层次，避免矩形高光压在面部中央，也不把地平线或细灯条映成整圈线条；不使用毛绒的灰度换色曲线。着色器与充气高度场的实现位于 [balloon-renderer.js](../src/materials/balloon-renderer.js)，来源与使用条件见 [原许可](../LICENSE.elastic-mesh)。同色图集可供宿主共用，三种材质在库内按同一形状的目标主体尺寸校准，并将可见身体居中于原生坐标，只变换身体，不改变眼睛坐标；所有形状和状态继续沿用已有的 SVG 径向变形，无需每个头像持有图形上下文。
 
 ```sh
 node neuxbot/tools/generate-balloon-atlas.mjs
